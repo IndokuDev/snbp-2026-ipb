@@ -5,41 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SNPMB 2026 Tracker</title>
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        .past { opacity: 0.5; text-decoration: line-through; filter: grayscale(1); }
+        .past { opacity: 0.4; text-decoration: line-through; filter: grayscale(1); }
+        input:checked ~ span { color: #64748b; text-decoration: line-through; }
     </style>
 </head>
-<body class="bg-slate-900 text-white font-sans min-h-screen pb-10">
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen">
 
-    <nav class="p-6 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-slate-900/90 backdrop-blur-md z-50">
+    <nav class="p-6 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-slate-950/80 backdrop-blur-lg z-50">
         <h1 class="text-xl font-bold flex items-center gap-2">
-            <span class="material-icons text-blue-400">event_note</span> SNPMB 2026
+            <span class="material-icons text-blue-500">verified</span> SNPMB 2026
         </h1>
-        <button id="btnNotif" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full text-sm flex items-center gap-2 transition">
-            <span class="material-icons text-sm">notifications</span> Aktifkan Notif
+        <button id="btnNotif" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition active:scale-95">
+            <span class="material-icons text-sm">notifications_active</span> AKTIFKAN NOTIF
         </button>
     </nav>
 
-    <main class="max-w-md mx-auto p-4 space-y-4" id="agenda-container">
-        </main>
+    <main class="max-w-md mx-auto p-4 space-y-10 pb-24">
+        
+        <section>
+            <div class="flex items-center justify-between mb-4 px-1">
+                <h2 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Timeline Utama</h2>
+                <span class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-400">Live Tracker</span>
+            </div>
+            <div id="agenda-container" class="space-y-3">
+                </div>
+        </section>
+
+        <section>
+            <div class="flex items-center justify-between mb-4 px-1">
+                <h2 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Dokumen Registrasi IPB</h2>
+                <span id="progress-text" class="text-[10px] text-blue-400 font-bold">0/15 Selesai</span>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+                <div id="berkas-container" class="divide-y divide-slate-800">
+                    </div>
+            </div>
+        </section>
+
+    </main>
 
     <script>
         const agenda = [
             { tgl: "2025-12-29", event: "Pengumuman Kuota Sekolah" },
-            { tgl: "2026-01-15", event: "Masa Sanggah Kuota (Berakhir)" },
-            { tgl: "2026-01-26", event: "Registrasi Akun Sekolah (Berakhir)" },
-            { tgl: "2026-02-02", event: "Pengisian PDSS (Berakhir)" },
-            { tgl: "2026-02-18", event: "Registrasi Akun Siswa & Pendaftaran SNBP (Berakhir)" },
+            { tgl: "2026-01-15", event: "Masa Sanggah Kuota" },
+            { tgl: "2026-01-26", event: "Registrasi Akun Sekolah" },
+            { tgl: "2026-02-02", event: "Pengisian PDSS" },
+            { tgl: "2026-02-18", event: "Registrasi Akun & Pendaftaran SNBP" },
             { tgl: "2026-03-31", event: "Pengumuman SNBP" },
-            { tgl: "2026-04-06", event: "Registrasi Online (Berakhir)" },
+            { tgl: "2026-04-06", event: "Registrasi Online (Deadline!)" },
             { tgl: "2026-04-17", event: "Unduh Tagihan UKT" },
             { tgl: "2026-04-24", event: "Batas Pembayaran UKT" },
             { tgl: "2026-08-18", event: "Awal Perkuliahan" }
         ];
 
-        function updateUI() {
+        const daftarBerkas = [
+            "Kartu Peserta Jalur SNBP", "Rapor Semester 1-5 (Lengkap)", "SKL Asli / Ket. Kelas XII", 
+            "Ijazah Asli (Bolak-balik)", "Akta Kelahiran", "Kartu Keluarga (KK)", 
+            "KTP", "Pas Foto Terbaru (Latar Merah)", "Formulir Kesediaan Maba IPB", 
+            "Pernyataan Kesanggupan UKT", "Pernyataan Program IPB", "Kartu BPJS", 
+            "Asuransi Kesehatan Lain", "Bukti Listrik 3 Bulan", "Slip Gaji / Ket. Penghasilan"
+        ];
+
+        function initApp() {
+            renderAgenda();
+            renderBerkas();
+            registerSW();
+        }
+
+        function renderAgenda() {
             const container = document.getElementById('agenda-container');
             const now = new Date();
             container.innerHTML = '';
@@ -50,51 +87,70 @@
                 const diffTime = targetDate - now;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-                const div = document.createElement('div');
-                div.className = `p-4 rounded-2xl border ${isPast ? 'past border-slate-800 bg-slate-800/30' : 'border-slate-700 bg-slate-800'} transition-all`;
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border transition-all ${isPast ? 'past border-transparent bg-slate-900/50' : 'border-slate-800 bg-slate-900 shadow-lg'}`;
                 
-                div.innerHTML = `
-                    <div class="flex justify-between items-start">
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
                         <div>
-                            <p class="text-xs text-blue-400 font-mono">${item.tgl}</p>
-                            <h3 class="font-semibold text-lg leading-tight">${item.event}</h3>
+                            <p class="text-[10px] font-mono ${isPast ? 'text-slate-600' : 'text-blue-500'}">${item.tgl}</p>
+                            <h3 class="font-bold text-sm">${item.event}</h3>
                         </div>
-                        ${!isPast ? `<span class="bg-blue-500/20 text-blue-300 text-[10px] px-2 py-1 rounded-full uppercase font-bold tracking-wider">${diffDays} Hari Lagi</span>` : ''}
+                        ${!isPast ? `<span class="text-[10px] font-black bg-blue-500/10 text-blue-400 px-2 py-1 rounded-lg">${diffDays} HARI LAGI</span>` : '<span class="material-icons text-green-500 text-sm">check_circle</span>'}
                     </div>
                 `;
-                container.appendChild(div);
+                container.appendChild(card);
 
-                // Logika Send Notif Otomatis jika hari ini adalah tanggalnya
-                if (new Date().toISOString().split('T')[0] === item.tgl) {
-                    sendLocalNotification(item.event);
+                // Notif otomatis hari ini
+                if (new Date().toISOString().split('T')[0] === item.tgl && !isPast) {
+                    sendNotif("HARI INI: " + item.event);
                 }
             });
         }
 
-        // Register Service Worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+        function renderBerkas() {
+            const container = document.getElementById('berkas-container');
+            const saved = JSON.parse(localStorage.getItem('snpmb_docs')) || {};
+            let count = 0;
+
+            container.innerHTML = daftarBerkas.map((txt, i) => {
+                if(saved[i]) count++;
+                return `
+                    <label class="flex items-center gap-4 p-4 active:bg-slate-800 transition-colors cursor-pointer">
+                        <input type="checkbox" ${saved[i] ? 'checked' : ''} onchange="toggleBerkas(${i}, this.checked)" 
+                               class="w-5 h-5 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-0 focus:ring-offset-0">
+                        <span class="text-sm font-medium tracking-tight">${txt}</span>
+                    </label>
+                `;
+            }).join('');
+            document.getElementById('progress-text').innerText = `${count}/${daftarBerkas.length} Selesai`;
         }
 
-        // Fungsi Notifikasi
-        async function sendLocalNotification(title) {
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                const registration = await navigator.serviceWorker.ready;
-                registration.showNotification("SNPMB 2026: Hari Ini!", {
-                    body: title,
-                    icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968923.png',
-                    vibrate: [200, 100, 200]
-                });
+        function toggleBerkas(i, val) {
+            const saved = JSON.parse(localStorage.getItem('snpmb_docs')) || {};
+            saved[i] = val;
+            localStorage.setItem('snpmb_docs', JSON.stringify(saved));
+            renderBerkas();
+        }
+
+        async function sendNotif(msg) {
+            if (Notification.permission === 'granted') {
+                const reg = await navigator.serviceWorker.ready;
+                reg.showNotification("SNPMB Reminder", { body: msg, icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968923.png' });
             }
         }
 
         document.getElementById('btnNotif').onclick = () => {
-            Notification.requestPermission().then(res => alert("Status Notif: " + res));
+            Notification.requestPermission().then(p => { if(p === 'granted') alert('Notif Aktif, Cuk!'); });
         };
 
-        updateUI();
-        setInterval(updateUI, 1000 * 60 * 60); // Refresh tiap jam
+        function registerSW() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(e => console.error(e));
+            }
+        }
+
+        initApp();
     </script>
 </body>
 </html>
