@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNPMB 2026 Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .past { opacity: 0.5; text-decoration: line-through; filter: grayscale(1); }
+    </style>
+</head>
+<body class="bg-slate-900 text-white font-sans min-h-screen pb-10">
+
+    <nav class="p-6 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-slate-900/90 backdrop-blur-md z-50">
+        <h1 class="text-xl font-bold flex items-center gap-2">
+            <span class="material-icons text-blue-400">event_note</span> SNPMB 2026
+        </h1>
+        <button id="btnNotif" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full text-sm flex items-center gap-2 transition">
+            <span class="material-icons text-sm">notifications</span> Aktifkan Notif
+        </button>
+    </nav>
+
+    <main class="max-w-md mx-auto p-4 space-y-4" id="agenda-container">
+        </main>
+
+    <script>
+        const agenda = [
+            { tgl: "2025-12-29", event: "Pengumuman Kuota Sekolah" },
+            { tgl: "2026-01-15", event: "Masa Sanggah Kuota (Berakhir)" },
+            { tgl: "2026-01-26", event: "Registrasi Akun Sekolah (Berakhir)" },
+            { tgl: "2026-02-02", event: "Pengisian PDSS (Berakhir)" },
+            { tgl: "2026-02-18", event: "Registrasi Akun Siswa & Pendaftaran SNBP (Berakhir)" },
+            { tgl: "2026-03-31", event: "Pengumuman SNBP" },
+            { tgl: "2026-04-06", event: "Registrasi Online (Berakhir)" },
+            { tgl: "2026-04-17", event: "Unduh Tagihan UKT" },
+            { tgl: "2026-04-24", event: "Batas Pembayaran UKT" },
+            { tgl: "2026-08-18", event: "Awal Perkuliahan" }
+        ];
+
+        function updateUI() {
+            const container = document.getElementById('agenda-container');
+            const now = new Date();
+            container.innerHTML = '';
+
+            agenda.forEach(item => {
+                const targetDate = new Date(item.tgl);
+                const isPast = now > targetDate.setHours(23, 59, 59);
+                const diffTime = targetDate - now;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                const div = document.createElement('div');
+                div.className = `p-4 rounded-2xl border ${isPast ? 'past border-slate-800 bg-slate-800/30' : 'border-slate-700 bg-slate-800'} transition-all`;
+                
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs text-blue-400 font-mono">${item.tgl}</p>
+                            <h3 class="font-semibold text-lg leading-tight">${item.event}</h3>
+                        </div>
+                        ${!isPast ? `<span class="bg-blue-500/20 text-blue-300 text-[10px] px-2 py-1 rounded-full uppercase font-bold tracking-wider">${diffDays} Hari Lagi</span>` : ''}
+                    </div>
+                `;
+                container.appendChild(div);
+
+                // Logika Send Notif Otomatis jika hari ini adalah tanggalnya
+                if (new Date().toISOString().split('T')[0] === item.tgl) {
+                    sendLocalNotification(item.event);
+                }
+            });
+        }
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        // Fungsi Notifikasi
+        async function sendLocalNotification(title) {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                const registration = await navigator.serviceWorker.ready;
+                registration.showNotification("SNPMB 2026: Hari Ini!", {
+                    body: title,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968923.png',
+                    vibrate: [200, 100, 200]
+                });
+            }
+        }
+
+        document.getElementById('btnNotif').onclick = () => {
+            Notification.requestPermission().then(res => alert("Status Notif: " + res));
+        };
+
+        updateUI();
+        setInterval(updateUI, 1000 * 60 * 60); // Refresh tiap jam
+    </script>
+</body>
+</html>
