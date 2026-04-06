@@ -1,15 +1,17 @@
 {
   "name": "SNPMB 2026 Tracker",
   "short_name": "SNPMB",
-  "start_url": ".",
+  "description": "Tracker Jadwal & Berkas SNPMB 2026",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
-  "theme_color": "#2563eb",
+  "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/5968/5968923.png",
+      "src": "https://indokudev.my.id/assets/avatar-DoBNYD_4.jpg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
