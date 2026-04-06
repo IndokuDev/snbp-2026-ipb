@@ -1,0 +1,15 @@
+{
+  "name": "SNPMB 2026 Tracker",
+  "short_name": "SNPMB",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5968/5968923.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
